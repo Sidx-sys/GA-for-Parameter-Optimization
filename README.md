@@ -29,19 +29,15 @@ After some trial and error, we decided to choose our noise such that it only cre
 
 ### Fitness Function
 
-If there is something that we have changed numerous times throughout the making of our GA, it is the fitness function that we've used. The arguments to our fitness functions were the training and the validation mean squared errors of the given vector, that that we got from making0 API calls.
+If there is something that we have changed numerous times throughout the making of our GA, it is the fitness function that we've used. The arguments to our fitness functions were the training and the validation mean squared errors of the given vector, that that we got from making API calls.
 
 A lot of thought went into what the fitness function should be, keeping in mind how far apart on average the `training_mse` and `validation_mse` were for the current generation. Based on which one we chose to reduce or increase, we would modify the fitness function.
 
 Initially, when we started out with the **overfit vector**, it had a high `validation_mse`(3e11) but a comparatively low `training_mse`(1e10). So here, our focus was to balance out the `validation_mse` and the `training_mse`. This could be achieved by making them meet at some middle ground, which would require that we incentivize reduction in the `validation_mse` and increase in the `training_mse`. As in the conventional GA, our GA's objective was to come up with vectors that maximize the output of the fitness function.
 
-The first fitness function we used was $\frac{1}{0.8v+0.2t}$ where `v` is the `validation_mse` and `t` is `training_mse`. Our objective was to provide the GA more incentive to reduce the `validation_mse` than to reduce the `training_mse`. However, this fitness function didn't achieve the results we hoped for.
-
 So we decided to take up a 2 step process.
 
-The first step was intentionally make the GA want to reduce `training_mse` and increase the `validation_mse`. We achieved this by using $\frac{t}{v^2}$ as our fitness function. This function heavily rewards decrease in the `validation_mse` while penalizing decrease in `training_mse`. We ran this for a few generations and monitored the average fitness of each generation till the `training_mse` and `validation_mse` evened out. Once we achieved this balance, we could no longer rely on this fitness function as it would keep increasing the `training_mse`.
-
-Onto the second step, since we had now balanced out the `training_mse` and `validation_mse`, simply reducing them both together seemed like the obvious next step. So we used $\frac{1}{xt+yv}$ as out fitness function, varying the values of $x$ and $y$ based on the values of `validation_mse` and `training_mse` that we got for the previous generation.
+The first step was intentionally make the GA want to reduce `training_mse` and increase the `validation_mse`. Onto the second step, since we had now balanced out the `training_mse` and `validation_mse`, simply reducing them both together seemed like the obvious next step.
 
 ```python
 train_mse = []
@@ -82,22 +78,6 @@ After some more research and study on crossover algorithms, we then used a metho
 
 Finally we landed on the **Binary Crossover** algorithm, since that added a good amount of variability in the crossover function.
 
-The entire idea behind binary crossover is to generate two children from two parents, satisfying the following equation, all the while being able to control the variation between the parents and children using the distribution index value.
-
-$$\frac{x_1^{new} + x_2^{new}}{2} = \frac{x_1 + x_2}{2}$$
-
-The crossover is done by choosing a random number ($u$) in the range $[0, 1)$. The distribution index ($\eta_c$) is assigned a value between $[2, 5]$, it determines how much the offsprings will differ from their parents (*inversely related to difference*), and then $\beta$ is calculated as follows:
-
-$$\beta = \begin{cases} 
-        (2u)^{\frac{1}{\eta_c + 1}}, & \text{if } u \leq 0.5 \\
-        {(\frac{1}{2(1-u)})}^{\frac{1}{\eta_c + 1}}, & \text{if } u \gt 0.5 \\
-        \end{cases}$$
-
-Then,
-
-$$x_1^{new} = 0.5[(1+\beta)x_1 + (1-\beta)x_2] \\
-x_2^{new} = 0.5[(1-\beta)x_1 + (1+\beta)x_2]$$
-
 ```python
 parent1 = np.array(parent1)
 parent2 = np.array(parent2)
@@ -117,17 +97,7 @@ return random.choice([offspring1.tolist(),offspring2.tolist()])
 
 For the next generation we *randomly choose one of the two offsprings* created.
 
-The crossover is done by choosing a random number ($u$) in the range $[0, 1)$. The distribution index ($\eta_c$) is assigned a value between $[2, 5]$, it determines how much the offsprings will differ from their parents (*inversely related to difference*), and then $\beta$ is calculated as follows:
-
-$$\beta = \begin{cases} 
-        (2u)^{\frac{1}{\eta_c + 1}}, & \text{if } u \leq 0.5 \\
-        {(\frac{1}{2(1-u)})}^{\frac{1}{\eta_c + 1}}, & \text{if } u \gt 0.5 \\
-        \end{cases}$$
-
-Then,
-
-$$x_1^{new} = 0.5[(1+\beta)x_1 + (1-\beta)x_2] \\
-x_2^{new} = 0.5[(1-\beta)x_1 + (1+\beta)x_2]$$
+The crossover is done by choosing a random number `u` in the range *[0, 1)*. The distribution index is assigned a value between *[2, 5]*, it determines how much the offsprings will differ from their parents (*inversely related to difference*), and then $\beta$ is calculated as follows:
 
 ```python
 parent1 = np.array(parent1)
